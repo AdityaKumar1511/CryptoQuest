@@ -12,17 +12,15 @@ import {
   BookOpen, 
   X 
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function InteractionZone() {
   const {
     levels,
     currentLevelIndex,
-    score,
     timeLeft,
-    hintsUsed,
     submitFlag,
-    useHint,
+    revealHint,
     tickTimer,
     hasFailed,
     isLevelCleared,
@@ -37,7 +35,6 @@ export default function InteractionZone() {
     message: ""
   });
   
-  const [showHintMsg, setShowHintMsg] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
 
@@ -69,10 +66,12 @@ export default function InteractionZone() {
 
   // Reset local panel states on level changes
   useEffect(() => {
-    setInputValue("");
-    setFeedback({ type: "none", message: "" });
-    setShowHintMsg(false);
-    setShowExplanationModal(false);
+    const timeout = setTimeout(() => {
+      setInputValue("");
+      setFeedback({ type: "none", message: "" });
+      setShowExplanationModal(false);
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [currentLevelIndex]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,8 +104,7 @@ export default function InteractionZone() {
       return;
     }
 
-    useHint();
-    setShowHintMsg(true);
+    revealHint();
   };
 
   // Format timer as MM:SS
@@ -124,7 +122,7 @@ export default function InteractionZone() {
       : "text-emerald-400 border-emerald-500/30 bg-emerald-500/5";
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950 border border-zinc-900 rounded p-3.5 relative overflow-hidden select-none justify-between space-y-3">
+    <div className="flex flex-col h-auto md:h-full bg-zinc-950 border border-zinc-900 rounded p-3.5 relative overflow-hidden select-none justify-between space-y-3">
       {/* Timer & Status Panel */}
       <div className="flex items-center justify-between border-b border-zinc-900 pb-2 shrink-0 z-10">
         <span className="text-zinc-500 font-mono text-[10px] tracking-wider uppercase">DECRYPTION_TIMER</span>
@@ -270,7 +268,7 @@ export default function InteractionZone() {
           >
             {currentLevelHintsRevealed === 0 ? (
               <p className="text-zinc-500 italic text-[10px] leading-relaxed">
-                "Agent, need progressive cryptographic intelligence to solve this protocol lock?"
+                &quot;Agent, need progressive cryptographic intelligence to solve this protocol lock?&quot;
               </p>
             ) : (
               currentLevel?.hints.slice(0, currentLevelHintsRevealed).map((hint, idx) => (

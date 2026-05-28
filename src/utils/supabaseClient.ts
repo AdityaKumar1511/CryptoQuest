@@ -30,8 +30,8 @@ export async function getOrCreateAnonymousUser() {
       return null;
     }
     return data?.user || null;
-  } catch (error: any) {
-    console.warn("Failed to authenticate anonymous user:", error?.message || error);
+  } catch (error) {
+    console.warn("Failed to authenticate anonymous user:", error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -48,8 +48,8 @@ export async function fetchLevelsFromDB() {
       return null;
     }
     return data;
-  } catch (error: any) {
-    console.warn("Failed to fetch levels from Supabase:", error?.message || error);
+  } catch (error) {
+    console.warn("Failed to fetch levels from Supabase:", error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -78,8 +78,8 @@ export async function saveUserProgress(
       return false;
     }
     return true;
-  } catch (error: any) {
-    console.warn("Failed to save progress to Supabase:", error?.message || error);
+  } catch (error) {
+    console.warn("Failed to save progress to Supabase:", error instanceof Error ? error.message : error);
     return false;
   }
 }
@@ -97,8 +97,8 @@ export async function getUserProgress(userId: string) {
       return null;
     }
     return data;
-  } catch (error: any) {
-    console.warn("Failed to load progress from Supabase:", error?.message || error);
+  } catch (error) {
+    console.warn("Failed to load progress from Supabase:", error instanceof Error ? error.message : error);
     return null;
   }
 }

@@ -15,8 +15,7 @@ import {
   LogOut,
   ShieldCheck,
   AlertTriangle,
-  Clipboard,
-  ExternalLink
+  Clipboard
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -42,7 +41,6 @@ export default function GamePage() {
     fetchLevels();
   }, [fetchLevels]);
 
-  const currentLevel = levels[currentLevelIndex];
   const levelNumDisplay = String(currentLevelIndex + 1).padStart(2, "0");
   const totalLevelsDisplay = String(levels.length).padStart(2, "0");
 
@@ -64,7 +62,7 @@ Play CryptoQuest now!`;
   };
 
   return (
-    <div className="min-h-screen h-screen w-screen bg-zinc-950 text-zinc-100 flex flex-col font-mono relative overflow-hidden select-none">
+    <div className="min-h-screen md:h-screen w-full md:w-screen bg-zinc-950 text-zinc-100 flex flex-col font-mono relative md:overflow-hidden select-none">
       {/* Background Matrix/Grid Aesthetic */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0c0c0e_1px,transparent_1px),linear-gradient(to_bottom,#0c0c0e_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-20" />
       <div className="absolute inset-0 bg-radial-gradient from-emerald-500/[0.015] via-transparent to-transparent pointer-events-none" />
@@ -141,7 +139,7 @@ Play CryptoQuest now!`;
       </header>
 
       {/* Main content grid */}
-      <main className="flex-1 min-h-0 relative z-10 p-4">
+      <main className="flex-1 md:min-h-0 relative z-10 p-4 overflow-y-auto md:overflow-hidden">
         {isLoading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-30">
             <span className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
@@ -253,20 +251,20 @@ Play CryptoQuest now!`;
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-full w-full flex flex-col md:flex-row gap-4"
+              className="h-auto md:h-full w-full flex flex-col md:flex-row gap-4"
             >
               {/* PANEL 1: MISSION CONSOLE (40% Width) */}
-              <div className="flex-1 md:flex-[4] h-full min-h-0">
+              <div className="h-[320px] md:h-full flex-none md:flex-[4] min-h-0">
                 <TerminalConsole />
               </div>
 
               {/* PANEL 2: INTERACTION ZONE (30% Width) */}
-              <div className="flex-1 md:flex-[3] h-full min-h-0">
+              <div className="h-auto md:h-full flex-none md:flex-[3] min-h-0">
                 <InteractionZone />
               </div>
 
               {/* PANEL 3: THE CYBER LAB (30% Width) */}
-              <div className="flex-1 md:flex-[3] h-full min-h-0">
+              <div className="h-auto md:h-full flex-none md:flex-[3] min-h-0">
                 <ToolWrapper />
               </div>
             </motion.div>

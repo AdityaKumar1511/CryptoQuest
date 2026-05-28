@@ -56,16 +56,22 @@ export default function ToolWrapper() {
     const newUnlocks = unlockedTools.filter((t) => !previouslyUnlocked.includes(t));
     if (newUnlocks.length > 0) {
       synthSound.playUnlock();
-      setPreviouslyUnlocked(unlockedTools);
-      // Auto switch to the newly unlocked tab
-      setActiveTab(newUnlocks[0]);
+      const timeout = setTimeout(() => {
+        setPreviouslyUnlocked(unlockedTools);
+        // Auto switch to the newly unlocked tab
+        setActiveTab(newUnlocks[0]);
+      }, 0);
+      return () => clearTimeout(timeout);
     }
   }, [unlockedTools, previouslyUnlocked]);
 
   // Ensure active tab is always one of the unlocked ones
   useEffect(() => {
     if (!unlockedTools.includes(activeTab) && unlockedTools.length > 0) {
-      setActiveTab(unlockedTools[0]);
+      const timeout = setTimeout(() => {
+        setActiveTab(unlockedTools[0]);
+      }, 0);
+      return () => clearTimeout(timeout);
     }
   }, [unlockedTools, activeTab]);
 
@@ -92,10 +98,8 @@ export default function ToolWrapper() {
     }
   };
 
-  const activeTabConfig = tabs.find((t) => t.id === activeTab) || tabs[0];
-
   return (
-    <div className="flex flex-col h-full bg-zinc-950 border border-zinc-900 rounded p-4 relative overflow-hidden select-none">
+    <div className="flex flex-col h-auto md:h-full bg-zinc-950 border border-zinc-900 rounded p-4 relative overflow-hidden select-none">
       {/* Background Matrix/Grid Aesthetic */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0c0c0e_1px,transparent_1px),linear-gradient(to_bottom,#0c0c0e_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none opacity-40" />
 

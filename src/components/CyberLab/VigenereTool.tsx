@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useCrypto } from "@/src/hooks/useCrypto";
 import { synthSound } from "@/src/utils/audio";
-import { ArrowLeftRight, HelpCircle, RefreshCw } from "lucide-react";
+import { ArrowLeftRight, RefreshCw } from "lucide-react";
 
 interface VigenereToolProps {
   defaultText?: string;
@@ -16,8 +16,11 @@ export default function VigenereTool({ defaultText = "" }: VigenereToolProps) {
   const [isDecrypt, setIsDecrypt] = useState(true);
 
   useEffect(() => {
-    setText(defaultText);
-    setKey("KEY");
+    const timeout = setTimeout(() => {
+      setText(defaultText);
+      setKey("KEY");
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [defaultText]);
 
   const result = vigenere(text, key, isDecrypt);
@@ -41,7 +44,7 @@ export default function VigenereTool({ defaultText = "" }: VigenereToolProps) {
     if (cleanKey.length === 0) return [];
     
     let keyIdx = 0;
-    return text.split("").slice(0, 12).map((char, index) => {
+    return text.split("").slice(0, 12).map((char) => {
       const code = char.charCodeAt(0);
       let keyChar = "";
       let shift = 0;
@@ -76,8 +79,8 @@ export default function VigenereTool({ defaultText = "" }: VigenereToolProps) {
   const traces = getTraceData();
 
   return (
-    <div className="flex flex-col h-full space-y-4 text-xs font-mono text-zinc-300 overflow-hidden">
-      <div className="flex-1 space-y-4 overflow-y-auto scrollbar-thin pr-1 pb-2">
+    <div className="flex flex-col h-auto md:h-full space-y-4 text-xs font-mono text-zinc-300 md:overflow-hidden">
+      <div className="flex-1 space-y-4 md:overflow-y-auto scrollbar-thin pr-1 pb-2">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
           <span className="text-cyan-400 font-semibold tracking-wider">VIGENERE POLYALPHABETIC TOOL</span>

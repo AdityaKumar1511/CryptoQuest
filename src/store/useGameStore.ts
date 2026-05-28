@@ -20,6 +20,18 @@ export interface Level {
   explanation: string;
 }
 
+interface DbLevel {
+  id?: string;
+  level_number: number;
+  title?: string;
+  story_text?: string;
+  encrypted_payload: string;
+  correct_flag: string;
+  hint_text?: string;
+  unlocked_tools?: string[];
+  explanation_text?: string;
+}
+
 export interface GameStoreState {
   // State
   currentLevelIndex: number;
@@ -37,7 +49,7 @@ export interface GameStoreState {
 
   // Actions
   submitFlag: (input: string) => boolean;
-  useHint: () => void;
+  revealHint: () => void;
   advanceLevel: () => void;
   tickTimer: () => void;
   resetGame: () => void;
@@ -142,7 +154,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         // 1. Fetch levels from database
         const dbLevels = await fetchLevelsFromDB();
         if (dbLevels && dbLevels.length > 0) {
-          const mappedLevels: Level[] = dbLevels.map((item: any) => {
+          const mappedLevels: Level[] = (dbLevels as unknown as DbLevel[]).map((item: DbLevel) => {
             const levelNum = item.level_number;
             const defaultLevel = DEFAULT_LEVELS[levelNum - 1];
             
@@ -267,7 +279,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
 
   // Use hint action
-  useHint: () => {
+  revealHint: () => {
     const { currentLevelIndex, levels, currentLevelHintsRevealed } = get();
     const currentLevel = levels[currentLevelIndex];
     const maxHints = currentLevel?.hints?.length || 0;

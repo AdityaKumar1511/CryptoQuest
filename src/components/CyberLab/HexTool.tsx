@@ -20,13 +20,15 @@ const REFERENCE_ASCII_CHARACTERS = Array.from({ length: 79 }, (_, i) => {
 });
 
 export default function HexTool({ defaultText = "" }: HexToolProps) {
-  const { hexToAscii, asciiToHex } = useCrypto();
+  const { hexToAscii } = useCrypto();
   const [hexInput, setHexInput] = useState(defaultText);
-  const [asciiInput, setAsciiInput] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setHexInput(defaultText);
+    const timeout = setTimeout(() => {
+      setHexInput(defaultText);
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [defaultText]);
 
   const asciiResult = hexToAscii(hexInput);
@@ -36,10 +38,6 @@ export default function HexTool({ defaultText = "" }: HexToolProps) {
     synthSound.playKeyPress();
   };
 
-  const handleAsciiChange = (val: string) => {
-    setAsciiInput(val);
-    synthSound.playKeyPress();
-  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(asciiResult);
@@ -50,13 +48,12 @@ export default function HexTool({ defaultText = "" }: HexToolProps) {
 
   const handleReset = () => {
     setHexInput(defaultText);
-    setAsciiInput("");
     synthSound.playClick();
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 text-xs font-mono text-zinc-300 overflow-hidden">
-      <div className="flex-1 space-y-4 overflow-y-auto scrollbar-thin pr-1 pb-2">
+    <div className="flex flex-col h-auto md:h-full space-y-4 text-xs font-mono text-zinc-300 md:overflow-hidden">
+      <div className="flex-1 space-y-4 md:overflow-y-auto scrollbar-thin pr-1 pb-2">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
           <span className="text-amber-400 font-semibold tracking-wider">HEX CONVERTER & REFERENCE</span>
@@ -130,7 +127,7 @@ export default function HexTool({ defaultText = "" }: HexToolProps) {
 
       {/* Educational info */}
       <div className="text-[10px] text-zinc-600 border-t border-zinc-900 pt-2 leading-relaxed shrink-0">
-        INFO: Computers represent text in hex bytes using ASCII mappings. For instance, hex "46" corresponds to 70 in decimal, which is mapped to the character "F".
+        INFO: Computers represent text in hex bytes using ASCII mappings. For instance, hex &quot;46&quot; corresponds to 70 in decimal, which is mapped to the character &quot;F&quot;.
       </div>
     </div>
   );

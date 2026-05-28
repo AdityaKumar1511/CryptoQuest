@@ -4,23 +4,23 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useGameStore } from "@/src/store/useGameStore";
 import { synthSound } from "@/src/utils/audio";
-import { Terminal, Shield, Play, HelpCircle, Volume2, VolumeX, ShieldAlert } from "lucide-react";
+import { Play, HelpCircle, Volume2, VolumeX, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const bootLogs = [
+  "INITIALIZING CRYPTOQUEST_OS v1.07...",
+  "ESTABLISHING SECURE CONNECTION TO AGENCY SHADOW_NET...",
+  "LOADING DECRYPTION MODULES (CAESAR, HEX, VIGENERE)... SUCCESS",
+  "VERIFYING FIREWALL BYPASS STRATEGY... ACTIVE",
+  "DECRYPTING MISSION BRIEFING PARAMETERS...",
+  "AGENT ACCESS LEVEL: CERTIFIED [LEVEL_9]",
+  "SYSTEM STATUS: ONLINE. READY FOR INFILTRATION."
+];
 
 export default function Home() {
   const { isMuted, toggleMute, resetGame } = useGameStore();
   const [bootStep, setBootStep] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
-
-  const bootLogs = [
-    "INITIALIZING CRYPTOQUEST_OS v1.07...",
-    "ESTABLISHING SECURE CONNECTION TO AGENCY SHADOW_NET...",
-    "LOADING DECRYPTION MODULES (CAESAR, HEX, VIGENERE)... SUCCESS",
-    "VERIFYING FIREWALL BYPASS STRATEGY... ACTIVE",
-    "DECRYPTING MISSION BRIEFING PARAMETERS...",
-    "AGENT ACCESS LEVEL: CERTIFIED [LEVEL_9]",
-    "SYSTEM STATUS: ONLINE. READY FOR INFILTRATION."
-  ];
 
   // Simulating a boot loading sequence
   useEffect(() => {

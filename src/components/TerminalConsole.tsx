@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/src/store/useGameStore";
 import { synthSound } from "@/src/utils/audio";
-import { Clipboard, Play, FastForward } from "lucide-react";
+import { Clipboard, FastForward } from "lucide-react";
 
 export default function TerminalConsole() {
   const { levels, currentLevelIndex } = useGameStore();
@@ -21,32 +21,36 @@ export default function TerminalConsole() {
   // Trigger typewriter effect on level or story change
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setTypedStory("");
-    setIsTyping(true);
     
-    let currentIndex = 0;
-    const speed = 20; // ms per character
+    const timeout = setTimeout(() => {
+      setTypedStory("");
+      setIsTyping(true);
+      
+      let currentIndex = 0;
+      const speed = 20; // ms per character
 
-    timerRef.current = setInterval(() => {
-      if (currentIndex < rawStory.length) {
-        const char = rawStory[currentIndex];
-        if (char !== undefined) {
-          setTypedStory((prev) => prev + char);
+      timerRef.current = setInterval(() => {
+        if (currentIndex < rawStory.length) {
+          const char = rawStory[currentIndex];
+          if (char !== undefined) {
+            setTypedStory((prev) => prev + char);
+          }
+          
+          // Play keyboard click sound at periodic intervals to simulate typing
+          if (currentIndex % 3 === 0) {
+            synthSound.playKeyPress();
+          }
+          
+          currentIndex++;
+        } else {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsTyping(false);
         }
-        
-        // Play keyboard click sound at periodic intervals to simulate typing
-        if (currentIndex % 3 === 0) {
-          synthSound.playKeyPress();
-        }
-        
-        currentIndex++;
-      } else {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setIsTyping(false);
-      }
-    }, speed);
+      }, speed);
+    }, 0);
 
     return () => {
+      clearTimeout(timeout);
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [rawStory]);

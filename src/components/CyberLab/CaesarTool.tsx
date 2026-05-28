@@ -17,8 +17,11 @@ export default function CaesarTool({ defaultText = "" }: CaesarToolProps) {
 
   // Sync with level changes
   useEffect(() => {
-    setText(defaultText);
-    setShift(1);
+    const timeout = setTimeout(() => {
+      setText(defaultText);
+      setShift(1);
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [defaultText]);
 
   const result = caesar(text, shift, isDecrypt);

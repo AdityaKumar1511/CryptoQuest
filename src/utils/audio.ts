@@ -11,7 +11,7 @@ class AudioSynthesizer {
     if (typeof window === "undefined") return null;
     try {
       if (!this.ctx) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         if (!AudioContextClass) return null;
         this.ctx = new AudioContextClass();
       }
@@ -96,7 +96,7 @@ class AudioSynthesizer {
         osc.start(startTime);
         osc.stop(startTime + noteDuration);
       });
-    } catch (e) {}
+    } catch {}
   }
 
   playFailure() {
@@ -123,7 +123,7 @@ class AudioSynthesizer {
       
       osc.start();
       osc.stop(now + 0.35);
-    } catch (e) {}
+    } catch {}
   }
 
   playUnlock() {
@@ -152,7 +152,7 @@ class AudioSynthesizer {
         osc.start(now + i * 0.05);
         osc.stop(now + 0.4);
       });
-    } catch (e) {}
+    } catch {}
   }
 
   playCriticalWarning() {
