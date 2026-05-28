@@ -29,7 +29,10 @@ export default function TerminalConsole() {
 
     timerRef.current = setInterval(() => {
       if (currentIndex < rawStory.length) {
-        setTypedStory((prev) => prev + rawStory[currentIndex]);
+        const char = rawStory[currentIndex];
+        if (char !== undefined) {
+          setTypedStory((prev) => prev + char);
+        }
         
         // Play keyboard click sound at periodic intervals to simulate typing
         if (currentIndex % 3 === 0) {

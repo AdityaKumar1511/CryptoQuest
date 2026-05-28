@@ -8,13 +8,23 @@ class AudioSynthesizer {
   private isMuted: boolean = false;
 
   private initContext() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (typeof window === "undefined") return null;
+    try {
+      if (!this.ctx) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return null;
+        this.ctx = new AudioContextClass();
+      }
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch((err) => {
+          console.warn("AudioContext resume failed:", err);
+        });
+      }
+      return this.ctx;
+    } catch (e) {
+      console.warn("AudioContext initialization failed:", e);
+      return null;
     }
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume();
-    }
-    return this.ctx;
   }
 
   setMute(muted: boolean) {
@@ -25,6 +35,8 @@ class AudioSynthesizer {
     if (this.isMuted) return;
     try {
       const ctx = this.initContext();
+      if (!ctx) return;
+      
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
@@ -58,6 +70,8 @@ class AudioSynthesizer {
     if (this.isMuted) return;
     try {
       const ctx = this.initContext();
+      if (!ctx) return;
+      
       const now = ctx.currentTime;
       
       // Cyber arpeggio ascending tone
@@ -89,6 +103,8 @@ class AudioSynthesizer {
     if (this.isMuted) return;
     try {
       const ctx = this.initContext();
+      if (!ctx) return;
+      
       const now = ctx.currentTime;
       
       // Low buzz tone descending
@@ -114,6 +130,8 @@ class AudioSynthesizer {
     if (this.isMuted) return;
     try {
       const ctx = this.initContext();
+      if (!ctx) return;
+      
       const now = ctx.currentTime;
       
       // Dual high frequencies sweeping upwards

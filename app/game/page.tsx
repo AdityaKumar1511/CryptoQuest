@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useGameStore } from "@/src/store/useGameStore";
 import { synthSound } from "@/src/utils/audio";
+import { isSupabaseConfigured } from "@/src/utils/supabaseClient";
 import TerminalConsole from "@/src/components/TerminalConsole";
 import InteractionZone from "@/src/components/InteractionZone";
 import ToolWrapper from "@/src/components/CyberLab/ToolWrapper";
@@ -87,6 +88,16 @@ Play CryptoQuest now!`;
           <span className="text-emerald-400 font-bold text-xs tracking-widest uppercase hidden md:inline-block">
             🕵️‍♂️ CRYPTOQUEST_OS v1.07
           </span>
+          <div className="h-4 w-px bg-zinc-900 hidden md:block" />
+          {isSupabaseConfigured ? (
+            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded tracking-widest font-mono hidden md:inline-block animate-pulse">
+              ● DB_ACTIVE
+            </span>
+          ) : (
+            <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded tracking-widest font-mono hidden md:inline-block">
+              ● LOCAL_GUEST
+            </span>
+          )}
         </div>
 
         {/* Global Stats */}

@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import { supabase, isSupabaseConfigured } from "@/src/utils/supabaseClient";
+import { 
+  supabase, 
+  isSupabaseConfigured,
+  getOrCreateAnonymousUser,
+  fetchLevelsFromDB,
+  saveUserProgress,
+  getUserProgress
+} from "@/src/utils/supabaseClient";
 import { synthSound } from "@/src/utils/audio";
 
 export interface Level {
@@ -40,7 +47,7 @@ const DEFAULT_LEVELS: Level[] = [
     id: "1",
     title: "Caesar Cipher",
     story: "LOG ENTRY: SECURE NODE 01\nWe intercepted an encrypted frequency from the syndicate commander. The cipher is a classical Caesar shift. Decrypt the message to locate their hideout.",
-    cipherText: "MXTVO",
+    cipherText: "MTYJQ",
     answer: "HOTEL",
     hint: "Julius Caesar shifts characters. Try shifting letters backward by 5 positions (A-Z).",
     unlockedTools: ["caesar"]
@@ -61,6 +68,24 @@ const DEFAULT_LEVELS: Level[] = [
     cipherText: "CLYNSU",
     answer: "SHADOW",
     hint: "Use the Vigenere Tool with keyword 'KEY' in decrypt mode.",
+    unlockedTools: ["caesar", "hex", "vigenere"]
+  },
+  {
+    id: "4",
+    title: "Double Threat",
+    story: "LOG ENTRY: SECURE PACKET 04\nWe captured a double-wrapped database token. The packet is encoded in hex bytes. Translate the hex string to ASCII characters, then apply a Caesar shift backward by 3 positions to reveal the true intelligence agent's codename.",
+    cipherText: "44 4a 48 51 57",
+    answer: "AGENT",
+    hint: "Convert hex bytes to ASCII first (e.g., '44' is 'D'), then slide Caesar shift to 3 in Decrypt mode.",
+    unlockedTools: ["caesar", "hex", "vigenere"]
+  },
+  {
+    id: "5",
+    title: "Vigenere Hex",
+    story: "LOG ENTRY: ENCRYPTED TELEMETRY 05\nOur deep network sniffer intercepted a high-priority telemetry dump. The database records are hex-encoded, but reversing the hex reveals a Vigenere-encrypted token. Convert the hex payload to ASCII, then decrypt it with key 'KEY' to find the syndicate database password.",
+    cipherText: "4d 43 5a 4f 56",
+    answer: "CYBER",
+    hint: "Translate the hex bytes to ASCII characters first. Then, load the resulting text in the Vigenere tool with key 'KEY'.",
     unlockedTools: ["caesar", "hex", "vigenere"]
   }
 ];
@@ -83,24 +108,92 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set({ isLoading: true });
     try {
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase
-          .from("levels")
-          .select("*")
-          .order("level_number", { ascending: true });
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          const mappedLevels: Level[] = data.map((item: any) => ({
-            id: item.id || String(item.level_number),
-            title: item.title,
-            story: item.story_text,
-            cipherText: item.encrypted_payload,
-            answer: item.correct_flag,
-            hint: item.hint_text || "Search the database for clues.",
-            unlockedTools: item.unlocked_tools || ["caesar"]
-          }));
+        // 1. Fetch levels from database
+        const dbLevels = await fetchLevelsFromDB();
+        if (dbLevels && dbLevels.length > 0) {
+          const mappedLevels: Level[] = dbLevels.map((item: any) => {
+            let cipherText = item.encrypted_payload;
+            // Hotfix: Correct legacy incorrect Level 1 Caesar ciphertext manually
+            if (item.level_number === 1 && (cipherText === "MXTVO" || !cipherText)) {
+              cipherText = "MTYJQ";
+            }
+            return {
+              id: item.id || String(item.level_number),
+              title: item.title,
+              story: item.story_text,
+              cipherText: cipherText,
+              answer: item.correct_flag,
+              hint: item.hint_text || "Search the database for clues.",
+              unlockedTools: item.unlocked_tools || ["caesar"]
+            };
+          });
           set({ levels: mappedLevels });
+
+          // Silent DB repair in case they executed the incorrect seed insert from legacy schema
+          const legacyRow = dbLevels.find(item => item.level_number === 1 && item.encrypted_payload === "MXTVO");
+          if (legacyRow) {
+            supabase
+              .from("levels")
+              .update({ encrypted_payload: "MTYJQ" })
+              .eq("level_number", 1)
+              .then();
+          }
+
+          // Auto-seed Level 4 and Level 5 if database level count is outdated
+          if (dbLevels.length < 5) {
+            const newLevelsToSeed = [
+              {
+                level_number: 4,
+                title: "Double Threat",
+                story_text: "LOG ENTRY: SECURE PACKET 04\nWe captured a double-wrapped database token. The packet is encoded in hex bytes. Translate the hex string to ASCII characters, then apply a Caesar shift backward by 3 positions to reveal the true intelligence agent's codename.",
+                encrypted_payload: "44 4a 48 51 57",
+                correct_flag: "AGENT",
+                hint_text: "Convert hex bytes to ASCII first (e.g., '44' is 'D'), then slide Caesar shift to 3 in Decrypt mode.",
+                unlocked_tools: ["caesar", "hex", "vigenere"]
+              },
+              {
+                level_number: 5,
+                title: "Vigenere Hex",
+                story_text: "LOG ENTRY: ENCRYPTED TELEMETRY 05\nOur deep network sniffer intercepted a high-priority telemetry dump. The database records are hex-encoded, but reversing the hex reveals a Vigenere-encrypted token. Convert the hex payload to ASCII, then decrypt it with key 'KEY' to find the syndicate database password.",
+                encrypted_payload: "4d 43 5a 4f 56",
+                correct_flag: "CYBER",
+                hint_text: "Translate the hex bytes to ASCII characters first. Then, load the resulting text in the Vigenere tool with key 'KEY'.",
+                unlocked_tools: ["caesar", "hex", "vigenere"]
+              }
+            ];
+
+            for (const lvl of newLevelsToSeed) {
+              const alreadyExists = dbLevels.some(x => x.level_number === lvl.level_number);
+              if (!alreadyExists) {
+                supabase.from("levels").insert(lvl).then();
+              }
+            }
+          }
+        }
+
+        // 2. Sign in or fetch active anonymous user
+        const user = await getOrCreateAnonymousUser();
+        if (user) {
+          // 3. Load user progress from database
+          const progress = await getUserProgress(user.id);
+          if (progress) {
+            const savedLevelIndex = Math.max(0, (progress.current_level || 1) - 1);
+            const savedScore = progress.current_score || 0;
+            const savedHints = progress.hints_used || 0;
+            
+            // Recalculate tools unlocked for this level index
+            const nextTools = get().levels[savedLevelIndex]?.unlockedTools || 
+                              (savedLevelIndex === 0 ? ["caesar"] : 
+                               savedLevelIndex === 1 ? ["caesar", "hex"] : ["caesar", "hex", "vigenere"]);
+
+            set({
+              currentLevelIndex: savedLevelIndex,
+              score: savedScore,
+              hintsUsed: savedHints,
+              unlockedTools: nextTools,
+              isGameCompleted: savedLevelIndex >= get().levels.length
+            });
+          }
         }
       }
     } catch (e) {
@@ -142,21 +235,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         };
       });
 
-      // Save progress to Supabase if logged in (simulate/mock or live)
+      // Save progress to Supabase if logged in
       if (isSupabaseConfigured && supabase) {
-        const client = supabase;
-        // Run update query in background
-        client.auth.getUser().then(({ data }) => {
-          if (data?.user) {
-            client
-              .from("user_progress")
-              .upsert({
-                user_id: data.user.id,
-                current_level: nextIndex + 1,
-                current_score: get().score,
-                completed_at: finished ? new Date().toISOString() : null
-              })
-              .then();
+        getOrCreateAnonymousUser().then((user) => {
+          if (user) {
+            saveUserProgress(
+              user.id,
+              nextIndex,
+              get().score,
+              get().hintsUsed,
+              finished
+            );
           }
         });
       }
@@ -176,6 +265,21 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       hintsUsed: state.hintsUsed + 1,
       score: Math.max(0, state.score - 100) // 100 pt penalty for hint usage
     }));
+
+    // Save hint usage to Supabase in background
+    if (isSupabaseConfigured && supabase) {
+      getOrCreateAnonymousUser().then((user) => {
+        if (user) {
+          saveUserProgress(
+            user.id,
+            get().currentLevelIndex,
+            get().score,
+            get().hintsUsed,
+            get().isGameCompleted
+          );
+        }
+      });
+    }
   },
 
   // Timer Tick (called every 1s by interval in layout)
@@ -214,6 +318,21 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       isGameCompleted: false,
       unlockedTools: ["caesar"]
     });
+
+    // Reset progress in Supabase
+    if (isSupabaseConfigured && supabase) {
+      getOrCreateAnonymousUser().then((user) => {
+        if (user) {
+          saveUserProgress(
+            user.id,
+            0,
+            0,
+            0,
+            false
+          );
+        }
+      });
+    }
   },
 
   // Toggle Mute
