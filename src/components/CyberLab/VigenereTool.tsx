@@ -17,6 +17,7 @@ export default function VigenereTool({ defaultText = "" }: VigenereToolProps) {
 
   useEffect(() => {
     setText(defaultText);
+    setKey("KEY");
   }, [defaultText]);
 
   const result = vigenere(text, key, isDecrypt);

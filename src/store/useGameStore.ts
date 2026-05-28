@@ -15,8 +15,9 @@ export interface Level {
   story: string;
   cipherText: string;
   answer: string;
-  hint: string;
+  hints: string[];
   unlockedTools?: string[];
+  explanation: string;
 }
 
 export interface GameStoreState {
@@ -26,15 +27,18 @@ export interface GameStoreState {
   levels: Level[];
   timeLeft: number; // in seconds
   hintsUsed: number;
+  currentLevelHintsRevealed: number;
   isMuted: boolean;
   isLoading: boolean;
   hasFailed: boolean;
+  isLevelCleared: boolean;
   isGameCompleted: boolean;
   unlockedTools: string[];
 
   // Actions
   submitFlag: (input: string) => boolean;
   useHint: () => void;
+  advanceLevel: () => void;
   tickTimer: () => void;
   resetGame: () => void;
   toggleMute: () => void;
@@ -45,48 +49,73 @@ export interface GameStoreState {
 const DEFAULT_LEVELS: Level[] = [
   {
     id: "1",
-    title: "Caesar Cipher",
-    story: "LOG ENTRY: SECURE NODE 01\nWe intercepted an encrypted frequency from the syndicate commander. The cipher is a classical Caesar shift. Decrypt the message to locate their hideout.",
+    title: "ALPHA CHATTER",
+    story: "LOG ENTRY: SECURE NODE 01\nOur deep-space radio grid intercepted a scrambled radio frequency broadcast from a local syndicate outpost. The binary stream resolved to character sequence 'MTYJQ'. Signal analysts note there is a constant numeric phase shift in the wave frequency. Decrypt the communication to identify the hidden location.",
     cipherText: "MTYJQ",
     answer: "HOTEL",
-    hint: "Julius Caesar shifts characters. Try shifting letters backward by 5 positions (A-Z).",
-    unlockedTools: ["caesar"]
+    hints: [
+      "HINT 1/3: This frequency uses a classic alphabet shift (known historically as a Caesar cipher). Load it into the Caesar Shift Tool in the Cyber Lab.",
+      "HINT 2/3: You need to decrypt the scrambled text. Set the Caesar Shift Tool mode to DECRYPT.",
+      "HINT 3/3: Slide the Shift Key value to 5. Shifting each letter of 'MTYJQ' backward by 5 positions in the alphabet reveals the location."
+    ],
+    unlockedTools: ["caesar"],
+    explanation: "The communication was encrypted using a classical Caesar Shift. Each character in the original plaintext 'HOTEL' was shifted forward by 5 positions in the alphabet to produce the ciphertext 'MTYJQ' (H -> I,J,K,L,M; O -> P,Q,R,S,T; etc.). Sliding the Caesar Shift key to 5 in DECRYPT mode reverses this offset, shifting each character backward by 5 positions to reconstruct the original location 'HOTEL'."
   },
   {
     id: "2",
-    title: "Hex Code",
-    story: "LOG ENTRY: DATA DUMP 02\nA network trace captured a burst of raw data bytes in hex code. Translate the binary payload into plaintext ASCII to find the security token.",
+    title: "DATA RESIDUAL",
+    story: "LOG ENTRY: MEMORY CORE 02\nDuring a database node infiltration, we pulled a raw data fragment from an active memory buffer. The sector contents are represented by four separate pairs of hexadecimal symbols: '46 4c 41 47'. This telemetry is encoded in a standard raw computer format. Translate the hex stream to recover the original security flag.",
     cipherText: "46 4c 41 47",
     answer: "FLAG",
-    hint: "Convert each 2-digit hex byte to ASCII character (e.g. 46 is 'F').",
-    unlockedTools: ["caesar", "hex"]
+    hints: [
+      "HINT 1/3: The fragment '46 4c 41 47' consists of double-digit hex byte symbols. Switch to the HEX REF tab in the Cyber Lab.",
+      "HINT 2/3: Use the Hexadecimal ASCII Reference matrix in the Cyber Lab. Try clicking the hex values to automatically decode them or search their character equivalents.",
+      "HINT 3/3: Look up hex bytes: '46' (corresponds to character 'F'), '4c' ('L'), '41' ('A'), and '47' ('G') to construct the flag."
+    ],
+    unlockedTools: ["caesar", "hex"],
+    explanation: "Computer registers store character strings as hexadecimal numbers based on the standard ASCII encoding system. By referencing the HEX REF matrix, each 2-digit hex byte is converted directly to its character equivalent: '46' translates to ASCII decimal 70, which is the uppercase character 'F'; '4c' translates to 76 ('L'); '41' translates to 65 ('A'); and '47' translates to 71 ('G'). Combining these letters yields the plaintext database token 'FLAG'."
   },
   {
     id: "3",
-    title: "Vigenere Cipher",
-    story: "LOG ENTRY: SHADOW PROTOCOL 03\nOur agents extracted an encrypted password from a high-security vault. It uses a Vigenere polyalphabetic cipher with the security key 'KEY'. Decrypt it to unlock the network gateway.",
+    title: "SHADOW GATE",
+    story: "LOG ENTRY: VAULT INTERCEPT 03\nOur cover operative intercepted a highly-secure transmission payload: 'CLYNSU'. Attached to the transmitter's casing was a secondary microchip with a flash memory sector containing the keycode string 'KEY'. A secure decryption protocol is required to unlock this gateway.",
     cipherText: "CLYNSU",
     answer: "SHADOW",
-    hint: "Use the Vigenere Tool with keyword 'KEY' in decrypt mode.",
-    unlockedTools: ["caesar", "hex", "vigenere"]
+    hints: [
+      "HINT 1/3: The ciphertext is 'CLYNSU' and the keycode is 'KEY'. This pattern indicates a polyalphabetic key-based cipher, traditionally known as a Vigenere cipher.",
+      "HINT 2/3: Open the VIGENERE tab in the Cyber Lab. Ensure the tool is set to DECRYPT mode.",
+      "HINT 3/3: Input the cipher text 'CLYNSU' and key 'KEY'. The Vigenere cipher decrypts by subtracting the alphabetical values of the key from the ciphertext letters."
+    ],
+    unlockedTools: ["caesar", "hex", "vigenere"],
+    explanation: "The transmission was protected with a Vigenere Cipher, which shifts each letter using a repeating keyword. Using the key 'KEY' (repeated to match the ciphertext length: 'KEYKEY'), the Vigenere tool shifts each ciphertext character backward by the alphabetical value of the corresponding key letter: 'C' shifted by 'K' (10) becomes 'S'; 'L' shifted by 'E' (4) becomes 'H'; 'Y' shifted by 'Y' (24) becomes 'A'; 'N' shifted by 'K' (10) becomes 'D'; 'S' shifted by 'E' (4) becomes 'O'; and 'U' shifted by 'Y' (24) becomes 'W'. Recombining these yields the security bypass key 'SHADOW'."
   },
   {
     id: "4",
-    title: "Double Threat",
-    story: "LOG ENTRY: SECURE PACKET 04\nWe captured a double-wrapped database token. The packet is encoded in hex bytes. Translate the hex string to ASCII characters, then apply a Caesar shift backward by 3 positions to reveal the true intelligence agent's codename.",
+    title: "NESTED TELEMETRY",
+    story: "LOG ENTRY: ROUTER INTRUSION 04\nWe intercepted a double-wrapped tactical packet during a gateway handshake: '44 4a 48 51 57'. High-priority telemetry suggests that this payload has been doubly obfuscated using different core protocols. Reverse both security layers to reveal the deep-cover agent's true codename.",
     cipherText: "44 4a 48 51 57",
     answer: "AGENT",
-    hint: "Convert hex bytes to ASCII first (e.g., '44' is 'D'), then slide Caesar shift to 3 in Decrypt mode.",
-    unlockedTools: ["caesar", "hex", "vigenere"]
+    hints: [
+      "HINT 1/3: The raw payload '44 4a 48 51 57' consists of hex-encoded bytes. You must first translate this hexadecimal packet to normal letters.",
+      "HINT 2/3: Go to the HEX REF tool. Converting '44', '4a', '48', '51', '57' to ASCII character text reveals the intermediate text 'DJHQW'.",
+      "HINT 3/3: Take 'DJHQW' and load it in the Caesar Shift Tool. Since the signal specifies a shift-offset of 3, slide the shift key to 3 in DECRYPT mode to decode the codename."
+    ],
+    unlockedTools: ["caesar", "hex", "vigenere"],
+    explanation: "This level implements nested encryption. The outer layer is a standard hexadecimal ASCII block. Translating the hex bytes ('44', '4a', '48', '51', '57') using the HEX REF tool yields the intermediate ciphertext 'DJHQW'. The inner layer is a Caesar Cipher with a shift key value of 3. Loading 'DJHQW' in the Caesar Shift Tool and shifting backward by 3 positions (D -> A, J -> G, H -> E, Q -> N, W -> T) decrypts the nested payload and reveals the agent's codename 'AGENT'."
   },
   {
     id: "5",
-    title: "Vigenere Hex",
-    story: "LOG ENTRY: ENCRYPTED TELEMETRY 05\nOur deep network sniffer intercepted a high-priority telemetry dump. The database records are hex-encoded, but reversing the hex reveals a Vigenere-encrypted token. Convert the hex payload to ASCII, then decrypt it with key 'KEY' to find the syndicate database password.",
+    title: "MATRIX CORE",
+    story: "LOG ENTRY: DATABASE HANDSHAKE 05\nWe sniffed a high-priority mainframe database handshake payload: '4d 43 5a 4f 56'. Cryptographic logs indicate this database packet is wrapped in raw hexadecimal bytes, but its underlying string is encrypted with a master keycode. Master key logs record the active cipher key as 'KEY'. Decrypt the payload to obtain the network password.",
     cipherText: "4d 43 5a 4f 56",
     answer: "CYBER",
-    hint: "Translate the hex bytes to ASCII characters first. Then, load the resulting text in the Vigenere tool with key 'KEY'.",
-    unlockedTools: ["caesar", "hex", "vigenere"]
+    hints: [
+      "HINT 1/3: The database packet '4d 43 5a 4f 56' is hex-encoded. Your first step is to translate the hex bytes to ASCII.",
+      "HINT 2/3: Use the HEX REF tool to translate '4d', '43', '5a', '4f', '56'. You should get the intermediate string 'MCZOV'.",
+      "HINT 3/3: Now input the intermediate string 'MCZOV' into the VIGENERE tool in DECRYPT mode using the master database key 'KEY' to reveal the password."
+    ],
+    unlockedTools: ["caesar", "hex", "vigenere"],
+    explanation: "This deep telemetry gate uses a combination of hexadecimal formatting and Vigenere encryption. Translating the raw hex bytes ('4d', '43', '5a', '4f', '56') through the ASCII matrix gives 'MCZOV'. Inputting the intermediate text 'MCZOV' and the database key 'KEY' into the Vigenere tool in DECRYPT mode shifts each character backward based on the key ('M' shifted by 'K' becomes 'C', 'C' shifted by 'E' becomes 'Y', etc.). This successfully bypasses the encryption and reveals the database password 'CYBER'."
   }
 ];
 
@@ -97,9 +126,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   levels: DEFAULT_LEVELS,
   timeLeft: 300, // 5 minutes default per level
   hintsUsed: 0,
+  currentLevelHintsRevealed: 0,
   isMuted: false,
   isLoading: false,
   hasFailed: false,
+  isLevelCleared: false,
   isGameCompleted: false,
   unlockedTools: ["caesar"],
 
@@ -112,19 +143,24 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         const dbLevels = await fetchLevelsFromDB();
         if (dbLevels && dbLevels.length > 0) {
           const mappedLevels: Level[] = dbLevels.map((item: any) => {
+            const levelNum = item.level_number;
+            const defaultLevel = DEFAULT_LEVELS[levelNum - 1];
+            
             let cipherText = item.encrypted_payload;
             // Hotfix: Correct legacy incorrect Level 1 Caesar ciphertext manually
-            if (item.level_number === 1 && (cipherText === "MXTVO" || !cipherText)) {
+            if (levelNum === 1 && (cipherText === "MXTVO" || !cipherText)) {
               cipherText = "MTYJQ";
             }
+
             return {
-              id: item.id || String(item.level_number),
-              title: item.title,
-              story: item.story_text,
+              id: item.id || String(levelNum),
+              title: item.title || defaultLevel?.title || "",
+              story: defaultLevel?.story || item.story_text || "",
               cipherText: cipherText,
-              answer: item.correct_flag,
-              hint: item.hint_text || "Search the database for clues.",
-              unlockedTools: item.unlocked_tools || ["caesar"]
+              answer: item.correct_flag || defaultLevel?.answer || "",
+              hints: defaultLevel?.hints || (item.hint_text ? item.hint_text.split("||").map((h: string) => h.trim()) : []),
+              unlockedTools: item.unlocked_tools || defaultLevel?.unlockedTools || ["caesar"],
+              explanation: defaultLevel?.explanation || item.explanation_text || `This level was encrypted using standard tactical protocols. Decode the ciphertext '${cipherText}' using the unlocked tools in your Cyber Lab to produce the flag '${item.correct_flag}'.`
             };
           });
           set({ levels: mappedLevels });
@@ -145,19 +181,19 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
               {
                 level_number: 4,
                 title: "Double Threat",
-                story_text: "LOG ENTRY: SECURE PACKET 04\nWe captured a double-wrapped database token. The packet is encoded in hex bytes. Translate the hex string to ASCII characters, then apply a Caesar shift backward by 3 positions to reveal the true intelligence agent's codename.",
+                story_text: "LOG ENTRY: SECURE PACKET 04\nWe captured a double-wrapped database token. The intercepted packet payload is represented by '44 4a 48 51 57'. The outer encapsulation is represented in hex bytes. Reconstruct the payload parameters and decrypt the inner cipher to reveal the agent's codename.",
                 encrypted_payload: "44 4a 48 51 57",
                 correct_flag: "AGENT",
-                hint_text: "Convert hex bytes to ASCII first (e.g., '44' is 'D'), then slide Caesar shift to 3 in Decrypt mode.",
+                hint_text: "HINT 1/3: The payload '44 4a 48 51 57' consists of hex-encoded bytes. Switch to the HEX REF tool to translate it first. || HINT 2/3: Converting the hex payload gives an intermediate uppercase text. Read this text and load it in the Caesar Shift Tool. || HINT 3/3: Slide the Caesar shift to key 3 in DECRYPT mode to reverse the shift and get the codename.",
                 unlocked_tools: ["caesar", "hex", "vigenere"]
               },
               {
                 level_number: 5,
                 title: "Vigenere Hex",
-                story_text: "LOG ENTRY: ENCRYPTED TELEMETRY 05\nOur deep network sniffer intercepted a high-priority telemetry dump. The database records are hex-encoded, but reversing the hex reveals a Vigenere-encrypted token. Convert the hex payload to ASCII, then decrypt it with key 'KEY' to find the syndicate database password.",
+                story_text: "LOG ENTRY: ENCRYPTED TELEMETRY 05\nOur deep network sniffer intercepted a high-priority telemetry dump. The intercepted database payload is '4d 43 5a 4f 56'. Cryptographic registries indicate the presence of double layering, and key logs record the active cipher key as 'KEY'. Decrypt the payload to obtain the network password.",
                 encrypted_payload: "4d 43 5a 4f 56",
                 correct_flag: "CYBER",
-                hint_text: "Translate the hex bytes to ASCII characters first. Then, load the resulting text in the Vigenere tool with key 'KEY'.",
+                hint_text: "HINT 1/3: The payload is wrapped in raw hex bytes. Switch to the HEX REF tab to convert '4d 43 5a 4f 56' to normal characters. || HINT 2/3: Load the resulting intermediate text into the VIGENERE tool in DECRYPT mode. || HINT 3/3: Use the keycode 'KEY' to perform the multi-cipher shift and unlock the password.",
                 unlocked_tools: ["caesar", "hex", "vigenere"]
               }
             ];
@@ -205,9 +241,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   // Submit flag verification
   submitFlag: (input: string): boolean => {
-    const { currentLevelIndex, levels, hasFailed, isGameCompleted } = get();
+    const { currentLevelIndex, levels, hasFailed, isGameCompleted, isLevelCleared } = get();
 
-    if (hasFailed || isGameCompleted || currentLevelIndex >= levels.length) {
+    if (hasFailed || isGameCompleted || isLevelCleared || currentLevelIndex >= levels.length) {
       return false;
     }
 
@@ -217,38 +253,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     if (cleanInput === cleanAnswer) {
       synthSound.playSuccess();
-      const nextIndex = currentLevelIndex + 1;
-      const finished = nextIndex >= levels.length;
       
-      set((state) => {
-        // Calculate unlocked tools for next level
-        const nextLevel = state.levels[nextIndex];
-        const nextTools = nextLevel?.unlockedTools || 
-                           (nextIndex === 1 ? ["caesar", "hex"] : ["caesar", "hex", "vigenere"]);
-        
-        return {
-          currentLevelIndex: nextIndex,
-          score: state.score + 500,
-          timeLeft: finished ? state.timeLeft : 300, // reset timer for next level
-          unlockedTools: nextTools,
-          isGameCompleted: finished
-        };
-      });
-
-      // Save progress to Supabase if logged in
-      if (isSupabaseConfigured && supabase) {
-        getOrCreateAnonymousUser().then((user) => {
-          if (user) {
-            saveUserProgress(
-              user.id,
-              nextIndex,
-              get().score,
-              get().hintsUsed,
-              finished
-            );
-          }
-        });
-      }
+      set((state) => ({
+        score: state.score + 500,
+        isLevelCleared: true
+      }));
 
       return true;
     } else {
@@ -259,14 +268,65 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   // Use hint action
   useHint: () => {
-    const { isMuted } = get();
-    synthSound.playBeep(400, 0.15, "triangle", 0.04);
-    set((state) => ({
-      hintsUsed: state.hintsUsed + 1,
-      score: Math.max(0, state.score - 100) // 100 pt penalty for hint usage
-    }));
+    const { currentLevelIndex, levels, currentLevelHintsRevealed } = get();
+    const currentLevel = levels[currentLevelIndex];
+    const maxHints = currentLevel?.hints?.length || 0;
 
-    // Save hint usage to Supabase in background
+    if (currentLevelHintsRevealed >= maxHints) {
+      synthSound.playBeep(180, 0.25, "sawtooth", 0.05); // low rejection beep
+      return;
+    }
+
+    synthSound.playBeep(400, 0.15, "triangle", 0.04);
+    
+    set((state) => {
+      const nextHintsRevealed = state.currentLevelHintsRevealed + 1;
+      const nextScore = state.score - 100;
+      return {
+        hintsUsed: state.hintsUsed + 1,
+        currentLevelHintsRevealed: nextHintsRevealed,
+        score: nextScore
+      };
+    });
+
+    // Save progress to database in background
+    if (isSupabaseConfigured && supabase) {
+      getOrCreateAnonymousUser().then((user) => {
+        if (user) {
+          saveUserProgress(
+            user.id,
+            get().currentLevelIndex,
+            get().score,
+            get().hintsUsed,
+            get().isGameCompleted
+          );
+        }
+      });
+    }
+  },
+
+  // Advance to next level
+  advanceLevel: () => {
+    const { currentLevelIndex, levels } = get();
+    const nextIndex = currentLevelIndex + 1;
+    const finished = nextIndex >= levels.length;
+
+    set((state) => {
+      const nextLevel = state.levels[nextIndex];
+      const nextTools = nextLevel?.unlockedTools || 
+                         (nextIndex === 1 ? ["caesar", "hex"] : ["caesar", "hex", "vigenere"]);
+      
+      return {
+        currentLevelIndex: nextIndex,
+        isLevelCleared: false,
+        currentLevelHintsRevealed: 0,
+        timeLeft: finished ? state.timeLeft : 300, // reset timer for next level
+        unlockedTools: finished ? state.unlockedTools : nextTools,
+        isGameCompleted: finished
+      };
+    });
+
+    // Save progress to Supabase if logged in
     if (isSupabaseConfigured && supabase) {
       getOrCreateAnonymousUser().then((user) => {
         if (user) {
@@ -314,7 +374,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       score: 0,
       timeLeft: 300,
       hintsUsed: 0,
+      currentLevelHintsRevealed: 0,
       hasFailed: false,
+      isLevelCleared: false,
       isGameCompleted: false,
       unlockedTools: ["caesar"]
     });

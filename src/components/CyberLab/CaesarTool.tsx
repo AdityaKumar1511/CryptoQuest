@@ -12,12 +12,13 @@ interface CaesarToolProps {
 export default function CaesarTool({ defaultText = "" }: CaesarToolProps) {
   const { caesar } = useCrypto();
   const [text, setText] = useState(defaultText);
-  const [shift, setShift] = useState(5);
+  const [shift, setShift] = useState(1);
   const [isDecrypt, setIsDecrypt] = useState(true);
 
   // Sync with level changes
   useEffect(() => {
     setText(defaultText);
+    setShift(1);
   }, [defaultText]);
 
   const result = caesar(text, shift, isDecrypt);
@@ -37,7 +38,7 @@ export default function CaesarTool({ defaultText = "" }: CaesarToolProps) {
 
   const handleReset = () => {
     setText(defaultText);
-    setShift(5);
+    setShift(1);
     setIsDecrypt(true);
     synthSound.playClick();
   };
