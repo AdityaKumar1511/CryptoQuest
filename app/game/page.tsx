@@ -31,7 +31,8 @@ export default function GamePage() {
     isGameCompleted,
     toggleMute,
     resetGame,
-    fetchLevels
+    fetchLevels,
+    gameMode
   } = useGameStore();
 
   const [copiedChallenge, setCopiedChallenge] = useState(false);
@@ -45,7 +46,7 @@ export default function GamePage() {
   const totalLevelsDisplay = String(levels.length).padStart(2, "0");
 
   const handleCopyChallenge = () => {
-    const text = `🏆 CryptoQuest OS - Mission Accomplished!
+    const text = `🏆 CryptoQuest OS - ${gameMode === "tutorial" ? "Training Completed" : "Mission Accomplished"}!
 🔓 Levels Cleared: ${levels.length}/${levels.length}
 🔥 Final Score: ${score}
 💡 Hints Used: ${hintsUsed}
@@ -94,6 +95,16 @@ Play CryptoQuest now!`;
           ) : (
             <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded tracking-widest font-mono hidden md:inline-block">
               ● LOCAL_GUEST
+            </span>
+          )}
+          <div className="h-4 w-px bg-zinc-900 hidden md:block" />
+          {gameMode === "tutorial" ? (
+            <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded tracking-widest font-mono hidden md:inline-block font-bold">
+              ◈ MODE: TUTORIAL
+            </span>
+          ) : (
+            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded tracking-widest font-mono hidden md:inline-block font-bold">
+              ◈ MODE: STORY
             </span>
           )}
         </div>
@@ -189,36 +200,72 @@ Play CryptoQuest now!`;
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              className="absolute inset-4 z-20 bg-zinc-950/95 border border-emerald-500/30 rounded flex flex-col items-center justify-center p-6 text-center shadow-[0_0_30px_rgba(16,185,129,0.05)]"
+              className={`absolute inset-4 z-20 bg-zinc-950/95 border rounded flex flex-col items-center justify-center p-6 text-center ${
+                gameMode === "tutorial"
+                  ? "border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.05)]"
+                  : "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.05)]"
+              }`}
             >
-              <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-emerald-500" />
-              <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-emerald-500" />
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-emerald-500" />
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-emerald-500" />
+              {gameMode === "tutorial" ? (
+                <>
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-amber-500" />
+                  <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-amber-500" />
+                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-amber-500" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-amber-500" />
+                </>
+              ) : (
+                <>
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-emerald-500" />
+                  <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-emerald-500" />
+                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-emerald-500" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-emerald-500" />
+                </>
+              )}
 
-              <ShieldCheck className="w-16 h-16 text-emerald-400 animate-pulse mb-4" />
-              <h2 className="text-xl font-bold text-emerald-400 tracking-widest uppercase mb-2">
-                MISSION ACCOMPLISHED // SYSTEM EXFILTRATED
-              </h2>
-              <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-6 font-mono">
-                Excellent work, Agent. All cryptographic gateways have been decrypted and bypassed. The target
-                database is fully secured. Decrypted telemetry has been routed to headquarters.
-              </p>
+              <ShieldCheck className={`w-16 h-16 animate-pulse mb-4 ${
+                gameMode === "tutorial" ? "text-amber-400" : "text-emerald-400"
+              }`} />
+
+              {gameMode === "tutorial" ? (
+                <>
+                  <h2 className="text-xl font-bold text-amber-400 tracking-widest uppercase mb-2">
+                    TRAINING COMPLETE // PROTOCOLS MASTERED
+                  </h2>
+                  <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-6 font-mono">
+                    Outstanding performance, Recruit. All training modules have been cleared and cryptographic
+                    fundamentals are now unlocked. You are cleared for full Story Mode deployment.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-emerald-400 tracking-widest uppercase mb-2">
+                    MISSION ACCOMPLISHED // SYSTEM EXFILTRATED
+                  </h2>
+                  <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-6 font-mono">
+                    Excellent work, Agent. All cryptographic gateways have been decrypted and bypassed. The target
+                    database is fully secured. Decrypted telemetry has been routed to headquarters.
+                  </p>
+                </>
+              )}
 
               {/* Copy Challenge Panel */}
               <div className="w-full max-w-sm bg-zinc-950 border border-zinc-900 rounded p-4 mb-6 text-left relative overflow-hidden">
                 <div className="flex justify-between items-center text-[9px] text-zinc-500 font-mono tracking-wider mb-2">
-                  <span>DAILY CHALLENGE EXPORTED STATS</span>
+                  <span>{gameMode === "tutorial" ? "TRAINING STATS EXPORTED" : "DAILY CHALLENGE EXPORTED STATS"}</span>
                   <button
                     onClick={handleCopyChallenge}
-                    className="text-zinc-500 hover:text-emerald-400 flex items-center gap-1 cursor-pointer transition-colors"
+                    className={`flex items-center gap-1 cursor-pointer transition-colors text-zinc-500 ${
+                      gameMode === "tutorial" ? "hover:text-amber-400" : "hover:text-emerald-400"
+                    }`}
                   >
                     <Clipboard className="w-3.5 h-3.5" />
                     <span>{copiedChallenge ? "COPIED" : "COPY_STATS"}</span>
                   </button>
                 </div>
-                <pre className="text-[11px] text-emerald-400 font-bold leading-normal font-mono select-all">
-                  🏆 CryptoQuest OS - Mission Accomplished!{"\n"}
+                <pre className={`text-[11px] font-bold leading-normal font-mono select-all ${
+                  gameMode === "tutorial" ? "text-amber-400" : "text-emerald-400"
+                }`}>
+                  🏆 CryptoQuest OS - {gameMode === "tutorial" ? "Training Completed" : "Mission Accomplished"}!{"\n"}
                   🔓 Levels Cleared: {levels.length}/{levels.length}{"\n"}
                   🔥 Final Score: {score}{"\n"}
                   💡 Hints Used: {hintsUsed}
@@ -228,9 +275,13 @@ Play CryptoQuest now!`;
               <div className="flex gap-4">
                 <button
                   onClick={resetGame}
-                  className="px-6 py-2.5 border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 rounded font-bold text-xs tracking-widest uppercase hover:bg-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.1)] active:scale-95"
+                  className={`px-6 py-2.5 border rounded font-bold text-xs tracking-widest uppercase transition-all cursor-pointer active:scale-95 ${
+                    gameMode === "tutorial"
+                      ? "border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/25 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+                      : "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
+                  }`}
                 >
-                  REPLAY MISSION
+                  {gameMode === "tutorial" ? "REPLAY TRAINING" : "REPLAY MISSION"}
                 </button>
                 <Link href="/">
                   <button

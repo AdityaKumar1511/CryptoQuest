@@ -18,7 +18,7 @@ const bootLogs = [
 ];
 
 export default function Home() {
-  const { isMuted, toggleMute, resetGame } = useGameStore();
+  const { isMuted, toggleMute, setGameMode } = useGameStore();
   const [bootStep, setBootStep] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -33,10 +33,7 @@ export default function Home() {
     }
   }, [bootStep]);
 
-  const handleStartClick = () => {
-    synthSound.playUnlock();
-    resetGame(); // reset progress
-  };
+
 
   const handleInstructionsToggle = () => {
     setShowInstructions(!showInstructions);
@@ -127,18 +124,36 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
               <Link href="/game" className="flex-1 max-w-xs">
                 <button
-                  onClick={handleStartClick}
+                  onClick={() => {
+                    synthSound.playUnlock();
+                    setGameMode("tutorial");
+                  }}
+                  disabled={bootStep < bootLogs.length}
+                  className="w-full flex items-center justify-center gap-2 py-3 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/25 text-amber-400 rounded font-bold text-xs tracking-widest uppercase cursor-pointer transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(245,158,11,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Play className="w-4 h-4" />
+                  <span>START TUTORIAL</span>
+                </button>
+              </Link>
+              <Link href="/game" className="flex-1 max-w-xs">
+                <button
+                  onClick={() => {
+                    synthSound.playUnlock();
+                    setGameMode("story");
+                  }}
                   disabled={bootStep < bootLogs.length}
                   className="w-full flex items-center justify-center gap-2 py-3 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 rounded font-bold text-xs tracking-widest uppercase cursor-pointer transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(16,185,129,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Play className="w-4 h-4" />
-                  <span>START MISSION</span>
+                  <span>START STORY</span>
                 </button>
               </Link>
+            </div>
+            <div className="w-full flex justify-center">
               <button
                 onClick={handleInstructionsToggle}
                 disabled={bootStep < bootLogs.length}
-                className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded font-bold text-xs tracking-widest uppercase cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full max-w-lg flex items-center justify-center gap-2 py-2.5 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded font-bold text-xs tracking-widest uppercase cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <HelpCircle className="w-4 h-4" />
                 <span>INSTRUCTIONS</span>
