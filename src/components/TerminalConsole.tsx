@@ -6,7 +6,7 @@ import { synthSound } from "@/src/utils/audio";
 import { Clipboard, FastForward } from "lucide-react";
 
 export default function TerminalConsole() {
-  const { levels, currentLevelIndex } = useGameStore();
+  const { levels, currentLevelIndex, gameMode } = useGameStore();
   const currentLevel = levels[currentLevelIndex];
   
   const [typedStory, setTypedStory] = useState("");
@@ -107,29 +107,37 @@ export default function TerminalConsole() {
       </div>
 
       {/* Encrypted Data Block */}
-      <div className="mt-auto border-t border-zinc-900 pt-4 shrink-0 z-10 space-y-2">
-        <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono tracking-wider">
-          <span>INTERCEPTED_ENCRYPTED_BLOCK</span>
-          <button
-            onClick={handleCopyCipher}
-            className="text-zinc-500 hover:text-emerald-400 flex items-center gap-1 cursor-pointer transition-colors"
-          >
-            <Clipboard className="w-3 h-3" />
-            <span>{copied ? "COPIED" : "COPY_CIPHER"}</span>
-          </button>
-        </div>
-
-        <div className="bg-zinc-950/90 border border-emerald-500/30 rounded p-4 relative group overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.03)]">
-          <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-emerald-500" />
-          <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-emerald-500" />
-          <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l border-emerald-500" />
-          <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-emerald-500" />
-          
-          <div className="text-center font-mono text-base font-black tracking-widest text-emerald-400 select-all py-1.5">
-            {cipherText}
+      {gameMode === "story" ? (
+        <div className="mt-auto border-t border-zinc-900 pt-4 shrink-0 z-10 space-y-2">
+          <div className="text-center font-mono text-[9px] tracking-widest text-emerald-500/40 py-3.5 border border-zinc-900 rounded bg-zinc-950/40 select-none animate-pulse uppercase">
+            🔒 [SYS_ALERT: DECRYPT SOURCE DATA IN LIVE_MONITOR TAB]
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mt-auto border-t border-zinc-900 pt-4 shrink-0 z-10 space-y-2">
+          <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono tracking-wider">
+            <span>INTERCEPTED_ENCRYPTED_BLOCK</span>
+            <button
+              onClick={handleCopyCipher}
+              className="text-zinc-500 hover:text-emerald-400 flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <Clipboard className="w-3 h-3" />
+              <span>{copied ? "COPIED" : "COPY_CIPHER"}</span>
+            </button>
+          </div>
+
+          <div className="bg-zinc-950/90 border border-emerald-500/30 rounded p-4 relative group overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.03)]">
+            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-emerald-500" />
+            <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-emerald-500" />
+            <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l border-emerald-500" />
+            <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-emerald-500" />
+            
+            <div className="text-center font-mono text-base font-black tracking-widest text-emerald-400 select-all py-1.5">
+              {cipherText}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

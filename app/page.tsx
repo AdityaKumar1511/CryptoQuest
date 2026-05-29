@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useGameStore } from "@/src/store/useGameStore";
 import { synthSound } from "@/src/utils/audio";
 import { Play, HelpCircle, Volume2, VolumeX, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ModeSelection from "@/src/components/ModeSelection";
+import GamePage from "./game/page";
 
 const bootLogs = [
   "INITIALIZING CRYPTOQUEST_OS v1.07...",
@@ -18,9 +21,11 @@ const bootLogs = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const { isMuted, toggleMute, setGameMode } = useGameStore();
   const [bootStep, setBootStep] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [screenState, setScreenState] = useState<"menu" | "tutorial" | "story">("menu");
 
   // Simulating a boot loading sequence
   useEffect(() => {
@@ -32,6 +37,51 @@ export default function Home() {
       return () => clearTimeout(timeout);
     }
   }, [bootStep]);
+
+  const handleSelectMode = (mode: "tutorial" | "story") => {
+    synthSound.playUnlock();
+    setGameMode(mode);
+    setScreenState(mode);
+  };
+
+  if (bootStep >= bootLogs.length) {
+    if (screenState === "menu") {
+      return <ModeSelection onSelectMode={handleSelectMode} />;
+    }
+
+    return (
+      <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-mono">
+        {/* Top-Level System Status Bar */}
+        <div className="bg-black border-b border-zinc-900 px-6 py-2.5 flex items-center justify-between text-xs tracking-wider z-30 select-none">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-zinc-500 font-mono">SYS_SHELL // RUNNING PROFILE:</span>
+            {screenState === "tutorial" ? (
+              <span className="text-amber-400 font-bold uppercase tracking-widest animate-pulse font-mono">
+                TUTORIAL MODE (SANDBOX_ACTIVE)
+              </span>
+            ) : (
+              <span className="text-cyan-400 font-bold uppercase tracking-widest animate-pulse font-mono">
+                STORY MODE (CLASSIFIED_DEPLOYMENT)
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              synthSound.playClick();
+              setScreenState("menu");
+            }}
+            className="text-zinc-400 hover:text-rose-400 font-bold border border-zinc-800 hover:border-rose-500/30 px-3 py-1 rounded transition-all cursor-pointer bg-zinc-900/30 font-mono"
+          >
+            [ CANCEL_SESSION / DISCONNECT ]
+          </button>
+        </div>
+        <div className="flex-1">
+          <GamePage />
+        </div>
+      </div>
+    );
+  }
 
 
 

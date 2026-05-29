@@ -8,6 +8,11 @@ import { isSupabaseConfigured } from "@/src/utils/supabaseClient";
 import TerminalConsole from "@/src/components/TerminalConsole";
 import InteractionZone from "@/src/components/InteractionZone";
 import ToolWrapper from "@/src/components/CyberLab/ToolWrapper";
+import ServerRoom from "@/src/components/levels/ServerRoom";
+import DroneFeed from "@/src/components/levels/DroneFeed";
+import CctvFilter from "@/src/components/levels/CctvFilter";
+import RadarTrack from "@/src/components/levels/RadarTrack";
+import NodeGraph from "@/src/components/levels/NodeGraph";
 import {
   Volume2,
   VolumeX,
@@ -36,11 +41,17 @@ export default function GamePage() {
   } = useGameStore();
 
   const [copiedChallenge, setCopiedChallenge] = useState(false);
+  const [activePanelTab, setActivePanelTab] = useState<"briefing" | "monitor">("briefing");
 
   // Fetch levels from Supabase (or fallback) on load
   useEffect(() => {
     fetchLevels();
   }, [fetchLevels]);
+
+  // Reset tab to briefing when leveling up
+  useEffect(() => {
+    setActivePanelTab("briefing");
+  }, [currentLevelIndex]);
 
   const levelNumDisplay = String(currentLevelIndex + 1).padStart(2, "0");
   const totalLevelsDisplay = String(levels.length).padStart(2, "0");
@@ -305,8 +316,62 @@ Play CryptoQuest now!`;
               className="h-auto md:h-full w-full flex flex-col md:flex-row gap-4"
             >
               {/* PANEL 1: MISSION CONSOLE (40% Width) */}
-              <div className="h-[320px] md:h-full flex-none md:flex-[4] min-h-0">
-                <TerminalConsole />
+              <div className="h-[420px] md:h-full flex-none md:flex-[4] min-h-0 flex flex-col bg-zinc-950 border border-zinc-900 rounded overflow-hidden">
+                {/* High-Tech Workspace Tabs */}
+                {gameMode === "story" && (
+                  <div className="flex border-b border-zinc-900 bg-black/60 shrink-0 select-none text-[9px] font-bold tracking-widest font-mono">
+                    <button
+                      onClick={() => {
+                        synthSound.playClick?.();
+                        setActivePanelTab("briefing");
+                      }}
+                      className={`flex-1 py-3 text-center transition-all border-r border-zinc-900 cursor-pointer ${
+                        activePanelTab === "briefing"
+                          ? "bg-zinc-900/40 text-emerald-400 border-b-2 border-b-emerald-500"
+                          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/25"
+                      }`}
+                    >
+                      📋 BRIEFING_LOGS
+                    </button>
+                    <button
+                      onClick={() => {
+                        synthSound.playClick?.();
+                        setActivePanelTab("monitor");
+                      }}
+                      className={`flex-1 py-3 text-center transition-all relative cursor-pointer ${
+                        activePanelTab === "monitor"
+                          ? "bg-zinc-900/40 text-cyan-400 border-b-2 border-b-cyan-500"
+                          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/25"
+                      }`}
+                    >
+                      📡 LIVE_MONITOR
+                      {activePanelTab !== "monitor" && (
+                        <span className="absolute top-2.5 right-4 flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex-1 min-h-0">
+                  {gameMode === "story" ? (
+                    activePanelTab === "briefing" ? (
+                      <TerminalConsole />
+                    ) : (
+                      <div className="h-full">
+                        {currentLevelIndex === 0 && <ServerRoom />}
+                        {currentLevelIndex === 1 && <DroneFeed />}
+                        {currentLevelIndex === 2 && <CctvFilter />}
+                        {currentLevelIndex === 3 && <RadarTrack />}
+                        {currentLevelIndex === 4 && <NodeGraph />}
+                      </div>
+                    )
+                  ) : (
+                    <TerminalConsole />
+                  )}
+                </div>
               </div>
 
               {/* PANEL 2: INTERACTION ZONE (30% Width) */}
